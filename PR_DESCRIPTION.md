@@ -89,7 +89,7 @@ await recordAd({
 - [x] Batch processing multiple ads
 - [x] Audio integration with MP4 output
 - [x] Custom FPS settings (15, 30, 60)
-- [x] File size optimization for JPG output
+- [x] JPG backup image generation
 - [x] Progress tracking accuracy
 - [x] npm link integration testing
 

@@ -39,7 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🛠️ Technical Details
 - **Removed**: Puppeteer v19.2.2 dependency
 - **Added**: Playwright v1.46.0 dependency
-- **Browser Arguments**: Optimized Chromium flags for Playwright compatibility
+- **Browser Arguments**: Optimized Chromium flags for Playwright compatibility:
+  - **Removed**: `--single-process` (not supported by Playwright's multi-process architecture)
+  - **Enhanced**: `--disable-features=AudioServiceOutOfProcess,VizDisplayCompositor` (added VizDisplayCompositor for better rendering stability)
+  - **Added**: `--disable-gpu` and `--disable-software-rasterizer` (improved headless rendering consistency)
 - **Context Isolation**: Implemented proper browser context management
 - **Progress Callbacks**: Added onProgress parameter to recording functions
 

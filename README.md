@@ -14,7 +14,7 @@ The Display Ads Recorder is a powerful command-line tool designed to automate th
 - 🎵 Audio integration capabilities
 - ⚡ Parallel processing for better performance
 - 🎨 Customizable FPS settings (15, 30, 60)
-- 📦 Optimized file sizes with professional video quality
+- 📦 Professional video quality with enhanced encoding
 - 🚀 Easy integration with existing display ad projects
 - 🎯 Real-time progress tracking during capture
 - 🔧 Modern browser automation with Playwright
@@ -109,7 +109,7 @@ enableAdsRecorder(timeline, config);
 
 ### JPG Backup
 - Configurable file size limits
-- Automatic quality optimization
+- Last frame capture for backup purposes
 
 ## Contribute
 
