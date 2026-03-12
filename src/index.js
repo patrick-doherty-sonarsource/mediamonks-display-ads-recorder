@@ -144,24 +144,29 @@ module.exports = async function displayAdsRecorder(options, chunkSize = 10) {
   
     let processedItems = 0;
     
-    for (const [index, resultChunk] of resultChunks.entries()) {
-      if (name.includes('capturing screenshots')) {
-        // Handle screenshot progress differently
-        await Promise.all(resultChunk.map(async (adLocation) => {
-          await fn(adLocation, (current, total) => {
-            // Update progress for each frame captured
-            const overallProgress = ((processedItems * 100) + ((current / total) * 100)) / adSelection.location.length;
-            progressBar.update(Math.min(overallProgress, 100));
-          });
-          processedItems++;
-        }));
-      } else {
-        await Promise.all(resultChunk.map(fn));
-        progressBar.update(index * chunkSize + resultChunk.length);
+    try {
+      for (const [index, resultChunk] of resultChunks.entries()) {
+        if (name.includes('capturing screenshots')) {
+          // Handle screenshot progress differently
+          await Promise.all(resultChunk.map(async (adLocation) => {
+            await fn(adLocation, (current, total) => {
+              // Update progress for each frame captured
+              const overallProgress = ((processedItems * 100) + ((current / total) * 100)) / adSelection.location.length;
+              progressBar.update(Math.min(overallProgress, 100));
+            });
+            processedItems++;
+          }));
+        } else {
+          await Promise.all(resultChunk.map(fn));
+          progressBar.update(index * chunkSize + resultChunk.length);
+        }
       }
+    } catch (error) {
+      console.error('\nError:', error);
+    } finally {
+      progressBar.stop();
     }
     
-    progressBar.stop();
     console.log(`done in ${new Date().getTime() - startTime}ms`);
   }
 

@@ -9,15 +9,22 @@ module.exports = async function recordDisplayAd({
   outputPathImg,
   maxSizeBytes = 40 * 1024,
 }) {
+
+  let browser = null;
+  let page = null;
+  
   // console.log(
   //   `getting backup image ${outputPathImg} with max filesize ${Math.round(
   //     maxSizeBytes / 1024
   //   )}KB`
   // );
-  return new Promise(async (resolve) => {
+  return new Promise(async (resolve, reject) => {
     const browser = await chromium.launch({
       headless: true, // headless to false for testing
       args: minimal_args,
+    }).catch(err => {
+      console.error('[Error] Browser launch failed:', err);
+      return reject(err);
     });
 
     const context = await browser.newContext({

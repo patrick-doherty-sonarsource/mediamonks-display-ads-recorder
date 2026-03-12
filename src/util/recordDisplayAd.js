@@ -9,17 +9,34 @@ const screenshotBaseFilename = "screenshot_";
 const chromiumInstancesAmount = 1;
 
 module.exports = async function recordDisplayAd({ target, url, fps, onProgress = null }) {
-  return new Promise(async (resolve) => {
+  let browser = null;
+
+  return new Promise(async (resolve, reject) => {
     let screenshotBase = path.join(path.dirname(target), ".cache/screenshots/");
 
     if (!fs.existsSync(screenshotBase))
       fs.mkdirSync(screenshotBase, { recursive: true });
     await fs.emptyDir(screenshotBase); // remove old screenshots
 
-    const browser = await chromium.launch({
-      headless: true, // headless to false for testing
-      args: minimal_args,
-      ignoreHTTPSErrors: true,
+    try {
+      browser = await chromium.launch({
+        headless: true, // headless to false for testing
+        args: minimal_args,
+        ignoreHTTPSErrors: true,
+      });
+    } catch (err) {
+      console.error('[Error] Browser launch failed:', err);
+      return reject(err);
+    }
+
+    let isClosing = false;  // Add flag to track intentional closure
+
+    // Add browser event handlers with proper error handling
+    browser.on('disconnected', () => {
+      console.log('[Debug] Browser disconnected');
+      if (!isClosing) {
+        reject(new Error('Browser unexpectedly disconnected'));
+      }
     });
 
     const context = await browser.newContext({
@@ -29,10 +46,25 @@ module.exports = async function recordDisplayAd({ target, url, fps, onProgress =
 
     const page = await context.newPage();
 
+    // Add page event handlers
+    page.on('error', err => {
+      console.error('[Error] Page crashed:', err);
+      reject(err);
+    });
+
+    page.on('pageerror', err => {
+      console.error('[Error] Page error:', err);
+    });
+
+    page.on('console', msg => {
+      // console.log(`[Page Console] ${msg.type()}: ${msg.text()}`);
+    });
+
     let framesArray;
     let currentIndex = 0;
 
     async function recordFrame() {
+      try {
       const screenshot_nr = framesArray[currentIndex].frameNr;
       await page.screenshot({
         path:
@@ -51,17 +83,30 @@ module.exports = async function recordDisplayAd({ target, url, fps, onProgress =
         onProgress(currentIndex, framesArray.length);
       }
 
+      // Calculate progress percentage
+      const progress = (currentIndex / framesArray.length) * 100;
+      process.stdout.write(`\rCapturing frame ${currentIndex}/${framesArray.length} (${progress.toFixed(1)}%)`);
+
       if (currentIndex < framesArray.length) {
-        // request next frame
         await dispatchEventToPage(page, {
           name: "request-goto-frame",
           frame: framesArray[currentIndex].frameTime,
         });
       } else {
-        // finish
+        process.stdout.write('\n'); // New line after completion
+        isClosing = true;
         await browser.close();
         resolve();
       }
+    } catch (error) {
+      process.stdout.write('\n'); // New line in case of error
+      console.error(`[Error] Failed to record frame:`, error);
+      if (!isClosing) {
+          isClosing = true;
+          await browser.close();
+      }
+      reject(error);
+  }
     }
 
     await page.exposeFunction("onMessageReceivedEvent", async (e) => {
