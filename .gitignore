@@ -15,3 +15,5 @@ node_modules/
 
 ## only ignore in git
 bin/act
+.agents
+skills-lock.json

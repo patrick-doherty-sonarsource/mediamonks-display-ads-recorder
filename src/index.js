@@ -3,6 +3,7 @@ const addAudioToVideo = require("./util/addAudioToVideo");
 const renderVideo = require("./util/renderVideoFromFiles");
 const getBackupImage = require("./util/getBackupImage");
 const renderGIf = require("./util/renderGifFromVideoFile");
+const captureKeyframes = require("./util/captureKeyframes");
 const cliProgress = require("cli-progress");
 const path = require("path");
 const express = require("express");
@@ -55,6 +56,11 @@ module.exports = async function displayAdsRecorder(options, chunkSize = 10) {
   if (adSelection.output.includes("jpg")) {
     await runWithChunks(recordBackup, "making backup images")
   }
+
+  // if keyframes selected, capture a screenshot at each GSAP timeline label
+  if (adSelection.output.includes("keyframes")) {
+    await runWithChunks(recordKeyframes, "capturing keyframes")
+  }
   
   async function recordScreenshots(adLocation) {
     const [url, htmlBaseDirName] = urlFromAdLocation(adLocation);
@@ -101,6 +107,17 @@ module.exports = async function displayAdsRecorder(options, chunkSize = 10) {
       url,
       outputPathImg,
       maxSizeBytes: adSelection.jpgMaxFileSize * 1024,
+    });
+  }
+
+  async function recordKeyframes(adLocation) {
+    const [url, htmlBaseDirName] = urlFromAdLocation(adLocation);
+
+    await captureKeyframes({
+      url,
+      outputDir: targetDir,
+      adName: htmlBaseDirName,
+      format: adSelection.keyframeFormat || "png",
     });
   }
 

@@ -20,6 +20,10 @@ const findAdsInDirectory = require("../src/util/findAdsInDirectory");
       new program.Option("-g, --gif [loop]", "If you want to output animated gifs and loop them or play once").choices(['once', 'loop'])
     )
     .option("-m, --mp4", "If you want to output video")
+    .option("-k, --keyframes", "Capture a screenshot at each GSAP timeline label")
+    .addOption(
+      new program.Option("-kf, --keyframe-format <format>", "Image format for keyframe screenshots").choices(['png', 'jpg']).default('png')
+    )
     .option("-au, --audio <relative path to audio file from target dir>", "If you want to add audio")
     .option("-v, --volume <volume>", "When adding audio you can specify volume")
     .addOption(
@@ -53,6 +57,7 @@ const findAdsInDirectory = require("../src/util/findAdsInDirectory");
     { name: "mp4", value: "mp4", checked: false },
     { name: "gif (animated)", value: "gif", checked: false },
     { name: "jpg (last frame)", value: "jpg", checked: false },
+    { name: "keyframes (one per GSAP label)", value: "keyframes", checked: false },
   ]
 
   const gifLoopOptionsMap = {
@@ -67,6 +72,7 @@ const findAdsInDirectory = require("../src/util/findAdsInDirectory");
     gifLoopOptions: gifLoopOptionsMap[options.gif],
     fps: options.fps,
     jpgMaxFileSize: options.jpg,
+    keyframeFormat: options.keyframeFormat,
     audio: options.audio,
     volume: options.volume,
   }
@@ -127,6 +133,17 @@ const findAdsInDirectory = require("../src/util/findAdsInDirectory");
       message: "Please select max KB filesize for backup image",
       when: answers => (adSelection.output.includes("jpg") && adSelection.jpgMaxFileSize === true) || answers.output?.includes("jpg"),
       default: 40,
+    },
+    {
+      type: "list",
+      name: "keyframeFormat",
+      message: "Select image format for keyframe screenshots",
+      choices: [
+        { name: "PNG (lossless)", value: "png" },
+        { name: "JPG (quality 100)", value: "jpg" },
+      ],
+      when: answers => (adSelection.output.includes("keyframes") || answers.output?.includes("keyframes")) && !options.keyframeFormat,
+      default: 0,
     }
   ]
 
